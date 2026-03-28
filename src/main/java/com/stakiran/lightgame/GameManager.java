@@ -2,7 +2,6 @@ package com.stakiran.lightgame;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -16,8 +15,6 @@ import net.minecraft.world.border.WorldBorder;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-
-import net.minecraft.network.packet.s2c.play.PositionFlag;
 
 public class GameManager {
 
