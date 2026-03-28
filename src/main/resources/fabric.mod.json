@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "lightgame100",
+  "version": "${version}",
+  "name": "Light Game 100",
+  "description": "100マスワールドの地下をどれだけ照らせるかを競うミニゲームMOD",
+  "authors": [
+    "stakiran"
+  ],
+  "contact": {
+    "homepage": "https://github.com/stakiran/lightgame100",
+    "sources": "https://github.com/stakiran/lightgame100"
+  },
+  "license": "MIT",
+  "icon": "assets/lightgame100/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.stakiran.lightgame.LightGameMod"
+    ]
+  },
+  "mixins": [],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.4",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
