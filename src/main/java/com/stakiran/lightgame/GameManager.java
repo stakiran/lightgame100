@@ -13,8 +13,11 @@ import net.minecraft.world.GameMode;
 import net.minecraft.world.LightType;
 import net.minecraft.world.border.WorldBorder;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+
+import net.minecraft.network.packet.s2c.play.PositionFlag;
 
 public class GameManager {
 
@@ -78,7 +81,7 @@ public class GameManager {
         border.setSize(BORDER_SIZE);
 
         // Teleport player to center
-        player.teleport(gameWorld, centerPos.getX() + 0.5, centerPos.getY(), centerPos.getZ() + 0.5, player.getYaw(), player.getPitch());
+        player.teleport(gameWorld, centerPos.getX() + 0.5, centerPos.getY(), centerPos.getZ() + 0.5, Collections.emptySet(), player.getYaw(), player.getPitch(), false);
 
         setupDone = true;
         currentPhase = Phase.IDLE;
@@ -192,7 +195,7 @@ public class GameManager {
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             player.changeGameMode(GameMode.SPECTATOR);
             player.teleport(gameWorld, centerPos.getX() + 0.5, centerPos.getY(), centerPos.getZ() + 0.5,
-                player.getYaw(), player.getPitch());
+                Collections.emptySet(), player.getYaw(), player.getPitch(), false);
         }
 
         // Clear the sidebar scoreboard
@@ -245,7 +248,7 @@ public class GameManager {
         // Teleport back to center and switch to survival
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             player.teleport(gameWorld, centerPos.getX() + 0.5, centerPos.getY(), centerPos.getZ() + 0.5,
-                player.getYaw(), player.getPitch());
+                Collections.emptySet(), player.getYaw(), player.getPitch(), false);
             player.changeGameMode(GameMode.SURVIVAL);
         }
 
