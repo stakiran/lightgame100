@@ -44,7 +44,7 @@ public class GameManager {
     private static int ticksSinceLastScoreUpdate;
 
     // Snapshot of air blocks at game start (y < 64)
-    private static Set<Long> snapshotAirBlocks = new HashSet<>();
+    private static final Set<Long> snapshotAirBlocks = new HashSet<>();
 
     // World border size
     private static final int BORDER_SIZE = 100;
