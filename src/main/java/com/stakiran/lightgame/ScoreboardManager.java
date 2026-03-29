@@ -39,8 +39,10 @@ public class ScoreboardManager {
         ScoreboardObjective objective = scoreboard.getNullableObjective(OBJECTIVE_NAME);
         if (objective == null) return;
 
-        // Clear old scores
+        // Clear old scores (recreates the objective)
         clearScores(scoreboard, objective);
+        objective = scoreboard.getNullableObjective(OBJECTIVE_NAME);
+        if (objective == null) return;
 
         double percent = total > 0 ? (score * 100.0 / total) : 0;
         String timeStr = String.format("%d:%02d", minutes, seconds);
