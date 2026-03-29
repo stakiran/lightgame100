@@ -1,38 +1,43 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Claude Code (claude.ai/code) がこのリポジトリで作業する際のガイドです。
 
-## Project Overview
+## プロジェクト概要
 
-Minecraft Fabric mod (1.21.4) — a minigame where players compete to light up underground air blocks within a 100-block world border. Written in Java 21.
+Minecraft Fabric MOD（1.21.4）。100ブロックのワールドボーダー内で地下の暗い空気ブロックをどれだけ照らせるかを競うミニゲーム。Java 21で記述。
 
-## Build & Run
+## ビルド・実行
 
 ```bash
-./gradlew build          # Build → build/libs/lightgame100-*.jar
-./gradlew vscode         # Generate VSCode project files
+./gradlew build          # ビルド → build/libs/lightgame100-*.jar
+./gradlew vscode         # VSCode プロジェクトファイル生成
 ```
 
-Debug: VSCode Run and Debug → "Minecraft Client"
+デバッグ: VSCode の「実行とデバッグ」→「Minecraft Client」
 
-No test suite exists.
+テストスイートはなし。
 
-## Architecture
+## アーキテクチャ
 
-Four classes in `src/main/java/com/stakiran/lightgame/`:
+`src/main/java/com/stakiran/lightgame/` に5クラス:
 
-- **LightGameMod** — Entrypoint (`onInitialize`). Registers commands and tick events.
-- **LightGameCommand** — Brigadier command tree for `/lightgame {setup,start,stop,score}`. Validates game state, delegates to GameManager.
-- **GameManager** — Core game logic. Manages phase state machine (IDLE → PREVIEW → GAME → ENDED), world border setup, air block snapshot (y < 64), score calculation via block light levels, and tick-based timers (30s preview, 10min game). All state is static.
-- **ScoreboardManager** — Sidebar scoreboard display during the game phase. Shows time remaining, lit count, total, and percentage.
+- **LightGameMod** — エントリポイント（`onInitialize`）。コマンドとティックイベントを登録。
+- **LightGameCommand** — `/lightgame {setup,start,stop,score,kit}` のBrigadierコマンドツリー。ゲーム状態のバリデーションを行い、GameManagerに委譲。
+- **GameManager** — コアゲームロジック。フェーズ状態機械（IDLE → PREVIEW → GAME → ENDED）、ワールドボーダー設定、空気ブロックのスナップショット（y < 64、ブロック光レベル0のもの）、光レベルによるスコア計算、ティックベースのタイマー（30秒プレビュー、10分ゲーム）、ビーコン設置を管理。全状態はstaticフィールド。
+- **KitManager** — スターターアイテムキットの管理。ネザライト装備・松明・バケツ・エリトラ等をエンチャント済みシュルカーボックスとして提供。
+- **ScoreboardManager** — ゲームフェーズ中のサイドバースコアボード表示。残り時間、照らしたブロック数、合計、割合を表示。
 
-Game flow: `setup` sets world border and center position → `start` snapshots all air blocks below y=64, enters 30s spectator preview → transitions to 10min survival game phase → `stop` (manual or timeout) shows final score.
+ゲームフロー: `setup`でワールドボーダーと中心位置を設定 → `start`でy=64以下のブロック光レベル0の空気ブロックをスナップショットし、30秒のスペクテイターモードプレビュー → 10分のサバイバルゲームフェーズ → `stop`（手動またはタイムアウト）で最終スコア表示。
 
-Score = count of snapshotted air blocks that now have block light ≥ 1.
+スコア = スナップショットした空気ブロックのうちブロック光レベル ≥ 1 になったものの数。
 
-## Key Details
+## 重要事項
 
-- All game state is static fields on GameManager — single game instance only.
-- Versions are defined in `gradle.properties` (Minecraft, Yarn mappings, Fabric loader/API).
-- Mod metadata in `src/main/resources/fabric.mod.json`.
-- Language: UI messages are in Japanese.
+- 全ゲーム状態はGameManagerのstaticフィールド。シングルゲームインスタンスのみ。
+- バージョン定義は `gradle.properties`（Minecraft、Yarnマッピング、Fabric loader/API）。
+- MODメタデータは `src/main/resources/fabric.mod.json`。
+- UIメッセージは日本語。
+
+## 禁止事項
+
+- **`memo/` ディレクトリは読まないこと。** ユーザーから明示的に指示された場合のみ参照可。
