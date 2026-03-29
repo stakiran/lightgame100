@@ -3,6 +3,7 @@ package com.stakiran.lightgame;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -50,6 +51,9 @@ public class GameManager {
 
     // Snapshot of air blocks at game start (y < 64)
     private static final Set<Long> snapshotAirBlocks = new HashSet<>();
+
+    // Player's last position (saved each tick during GAME phase)
+    private static BlockPos lastPlayerPos;
 
     // Baseline lit count at snapshot time (natural light sources like glow berries, lava)
     private static int baselineLitCount;
@@ -168,6 +172,32 @@ public class GameManager {
         )), false);
     }
 
+    // ========== BEACON MARKER ==========
+
+    private static void placeBeaconMarker(BlockPos playerPos) {
+        // Place 3x3 iron block base one block below the player
+        int baseY = playerPos.getY() - 1;
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                gameWorld.setBlockState(new BlockPos(playerPos.getX() + dx, baseY, playerPos.getZ() + dz),
+                    Blocks.IRON_BLOCK.getDefaultState());
+            }
+        }
+
+        // Place beacon on top of the base
+        gameWorld.setBlockState(new BlockPos(playerPos.getX(), baseY + 1, playerPos.getZ()),
+            Blocks.BEACON.getDefaultState());
+
+        // Clear blocks above the beacon up to world height to let beam through
+        int worldTop = gameWorld.getTopYInclusive();
+        for (int y = baseY + 2; y <= worldTop; y++) {
+            BlockPos pos = new BlockPos(playerPos.getX(), y, playerPos.getZ());
+            if (!gameWorld.getBlockState(pos).isAir()) {
+                gameWorld.setBlockState(pos, Blocks.AIR.getDefaultState());
+            }
+        }
+    }
+
     // ========== STOP ==========
 
     public static void stop(ServerCommandSource source, StopReason reason) {
@@ -192,10 +222,19 @@ public class GameManager {
         server.getPlayerManager().broadcast(
             Text.literal(String.format("§6§l[LightGame] 最終スコア: %d / %d (%.1f%%)", lit, total, percent)), false);
 
-        // Put player back to spectator at center
+        // Place beacon marker at player's last position
+        if (lastPlayerPos != null) {
+            placeBeaconMarker(lastPlayerPos);
+            server.getPlayerManager().broadcast(
+                Text.literal(String.format("§e[LightGame] 最終位置: %d, %d, %d",
+                    lastPlayerPos.getX(), lastPlayerPos.getY(), lastPlayerPos.getZ())), false);
+        }
+
+        // Switch to spectator at last position for review
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             player.changeGameMode(GameMode.SPECTATOR);
-            player.teleport(gameWorld, centerPos.getX() + 0.5, centerPos.getY(), centerPos.getZ() + 0.5,
+            BlockPos tp = lastPlayerPos != null ? lastPlayerPos : centerPos;
+            player.teleport(gameWorld, tp.getX() + 0.5, tp.getY(), tp.getZ() + 0.5,
                 Collections.emptySet(), player.getYaw(), player.getPitch(), false);
         }
 
@@ -279,6 +318,11 @@ public class GameManager {
     }
 
     private static void onGameTick(MinecraftServer server) {
+        // Save player position each tick (so we have it even on death)
+        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            lastPlayerPos = player.getBlockPos();
+        }
+
         // Show time countdown
         int secondsLeft = ticksRemaining / TICKS_PER_SECOND;
         if (ticksRemaining % TICKS_PER_SECOND == 0) {
