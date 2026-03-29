@@ -1,6 +1,7 @@
 package com.stakiran.lightgame;
 
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -244,8 +245,23 @@ public class GameManager {
 
     // ========== TICK EVENT ==========
 
+    public static void resetState() {
+        currentPhase = Phase.IDLE;
+        setupDone = false;
+        centerPos = null;
+        gameWorld = null;
+        ticksRemaining = 0;
+        ticksSinceLastScoreUpdate = 0;
+        snapshotAirBlocks.clear();
+        lastPlayerPos = null;
+    }
+
     public static void registerEvents() {
         ServerTickEvents.END_SERVER_TICK.register(GameManager::onTick);
+
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            resetState();
+        });
 
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
             if (currentPhase == Phase.GAME && entity instanceof ServerPlayerEntity) {
