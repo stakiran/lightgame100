@@ -46,6 +46,9 @@ public class GameManager {
     // Snapshot of air blocks at game start (y < 64)
     private static final Set<Long> snapshotAirBlocks = new HashSet<>();
 
+    // Baseline lit count at snapshot time (natural light sources like glow berries, lava)
+    private static int baselineLitCount;
+
     // World border size
     private static final int BORDER_SIZE = 100;
 
@@ -94,11 +97,6 @@ public class GameManager {
     public static void start(ServerCommandSource source) {
         ServerPlayerEntity player = source.getPlayer();
         if (player == null) return;
-
-        // Take snapshot of air blocks
-        source.sendFeedback(() -> Text.literal("§e[LightGame] 地下の空気ブロックをスキャン中..."), false);
-        takeSnapshot();
-        source.sendFeedback(() -> Text.literal("§a[LightGame] スキャン完了！ 対象ブロック数: " + snapshotAirBlocks.size()), false);
 
         // Enter preview phase (spectator mode)
         currentPhase = Phase.PREVIEW;
@@ -157,7 +155,7 @@ public class GameManager {
 
     public static void showScore(ServerCommandSource source) {
         int total = snapshotAirBlocks.size();
-        int lit = calculateScore();
+        int lit = Math.max(0, calculateScore() - baselineLitCount);
         double percent = total > 0 ? (lit * 100.0 / total) : 0;
 
         source.sendFeedback(() -> Text.literal(String.format(
@@ -172,7 +170,7 @@ public class GameManager {
 
         // Show final score
         int total = snapshotAirBlocks.size();
-        int lit = calculateScore();
+        int lit = Math.max(0, calculateScore() - baselineLitCount);
         double percent = total > 0 ? (lit * 100.0 / total) : 0;
 
         MinecraftServer server = source.getServer();
@@ -238,6 +236,15 @@ public class GameManager {
     }
 
     private static void transitionToGamePhase(MinecraftServer server) {
+        // Take snapshot after preview so loaded chunks include natural light sources
+        server.getPlayerManager().broadcast(
+            Text.literal("§e[LightGame] 地下の空気ブロックをスキャン中..."), false);
+        takeSnapshot();
+        baselineLitCount = calculateScore();
+        server.getPlayerManager().broadcast(
+            Text.literal("§a[LightGame] スキャン完了！ 対象ブロック数: " + snapshotAirBlocks.size()
+                + " (自然光源によるベースライン: " + baselineLitCount + ")"), false);
+
         currentPhase = Phase.GAME;
         ticksRemaining = GAME_SECONDS * TICKS_PER_SECOND;
         ticksSinceLastScoreUpdate = 0;
@@ -277,7 +284,7 @@ public class GameManager {
         ticksSinceLastScoreUpdate++;
         if (ticksSinceLastScoreUpdate >= SCORE_UPDATE_INTERVAL) {
             ticksSinceLastScoreUpdate = 0;
-            int score = calculateScore();
+            int score = Math.max(0, calculateScore() - baselineLitCount);
             int total = snapshotAirBlocks.size();
             int minutes = secondsLeft / 60;
             int secs = secondsLeft % 60;
