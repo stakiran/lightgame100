@@ -1,5 +1,6 @@
 package com.stakiran.lightgame;
 
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.block.BlockState;
 import net.minecraft.server.MinecraftServer;
@@ -24,6 +25,10 @@ public class GameManager {
         PREVIEW,    // 30-second spectator preview
         GAME,       // 10-minute game phase
         ENDED       // Game ended, showing results
+    }
+
+    public enum StopReason {
+        MANUAL, TIMEOUT, DEATH
     }
 
     private static Phase currentPhase = Phase.IDLE;
@@ -165,7 +170,7 @@ public class GameManager {
 
     // ========== STOP ==========
 
-    public static void stop(ServerCommandSource source, boolean isTimeout) {
+    public static void stop(ServerCommandSource source, StopReason reason) {
         currentPhase = Phase.ENDED;
 
         // Show final score
@@ -175,11 +180,12 @@ public class GameManager {
 
         MinecraftServer server = source.getServer();
 
-        if (isTimeout) {
-            server.getPlayerManager().broadcast(
+        switch (reason) {
+            case TIMEOUT -> server.getPlayerManager().broadcast(
                 Text.literal("§c§l[LightGame] 時間切れ！ ゲーム終了！"), false);
-        } else {
-            server.getPlayerManager().broadcast(
+            case DEATH -> server.getPlayerManager().broadcast(
+                Text.literal("§c§l[LightGame] プレイヤーが死亡！ ゲーム終了！"), false);
+            case MANUAL -> server.getPlayerManager().broadcast(
                 Text.literal("§c§l[LightGame] ゲームを手動停止しました。"), false);
         }
 
@@ -203,6 +209,15 @@ public class GameManager {
 
     public static void registerEvents() {
         ServerTickEvents.END_SERVER_TICK.register(GameManager::onTick);
+
+        ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
+            if (currentPhase == Phase.GAME && entity instanceof ServerPlayerEntity) {
+                MinecraftServer server = entity.getServer();
+                if (server != null) {
+                    stop(server.getCommandSource(), StopReason.DEATH);
+                }
+            }
+        });
     }
 
     private static void onTick(MinecraftServer server) {
@@ -294,7 +309,7 @@ public class GameManager {
         if (ticksRemaining <= 0) {
             // Game over
             ServerCommandSource source = server.getCommandSource();
-            stop(source, true);
+            stop(source, StopReason.TIMEOUT);
         }
     }
 }

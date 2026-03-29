@@ -62,7 +62,7 @@ public class LightGameCommand {
             return 0;
         }
 
-        GameManager.stop(source, false);
+        GameManager.stop(source, GameManager.StopReason.MANUAL);
         return 1;
     }
 
