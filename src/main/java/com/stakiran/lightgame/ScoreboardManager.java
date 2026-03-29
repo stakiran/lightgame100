@@ -1,6 +1,7 @@
 package com.stakiran.lightgame;
 
 import net.minecraft.scoreboard.*;
+import net.minecraft.scoreboard.number.BlankNumberFormat;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.Text;
 
@@ -17,14 +18,14 @@ public class ScoreboardManager {
             scoreboard.removeObjective(existing);
         }
 
-        // Create new objective
+        // Create new objective with blank number format to hide red numbers
         ScoreboardObjective objective = scoreboard.addObjective(
             OBJECTIVE_NAME,
             ScoreboardCriterion.DUMMY,
-            Text.literal("§6§l🔥 Light Game 100"),
+            Text.literal("§6§lLight Game 100"),
             ScoreboardCriterion.RenderType.INTEGER,
-            true,  // displayAutoUpdate
-            null   // numberFormat
+            true,
+            BlankNumberFormat.INSTANCE
         );
 
         // Set as sidebar display
@@ -48,13 +49,10 @@ public class ScoreboardManager {
         String timeStr = String.format("%d:%02d", minutes, seconds);
 
         // Scoreboard lines (higher number = higher on sidebar)
-        setScore(scoreboard, objective, "§7─────────", 6);
-        setScore(scoreboard, objective, "§f⏱ 残り時間: §e" + timeStr, 5);
-        setScore(scoreboard, objective, "§7", 4);
-        setScore(scoreboard, objective, "§f💡 照らした: §a" + score, 3);
-        setScore(scoreboard, objective, "§f📊 対象: §b" + total, 2);
-        setScore(scoreboard, objective, String.format("§f📈 達成率: §6%.1f%%", percent), 1);
-        setScore(scoreboard, objective, "§7──────────", 0);
+        setScore(scoreboard, objective, "§fTime:  §e" + timeStr, 3);
+        setScore(scoreboard, objective, "§fLit:   §a" + score, 2);
+        setScore(scoreboard, objective, "§fTotal: §b" + total, 1);
+        setScore(scoreboard, objective, String.format("§fRate:  §6%.1f%%", percent), 0);
     }
 
     public static void clearSidebar(MinecraftServer server) {
@@ -66,22 +64,19 @@ public class ScoreboardManager {
     }
 
     private static void clearScores(Scoreboard scoreboard, ScoreboardObjective objective) {
-        // Remove all scores for this objective by removing and re-adding
-        // This is the simplest approach for Fabric
         scoreboard.removeObjective(objective);
         ScoreboardObjective newObj = scoreboard.addObjective(
             OBJECTIVE_NAME,
             ScoreboardCriterion.DUMMY,
-            Text.literal("§6§l🔥 Light Game 100"),
+            Text.literal("§6§lLight Game 100"),
             ScoreboardCriterion.RenderType.INTEGER,
             true,
-            null
+            BlankNumberFormat.INSTANCE
         );
         scoreboard.setObjectiveSlot(ScoreboardDisplaySlot.SIDEBAR, newObj);
     }
 
     private static void setScore(Scoreboard scoreboard, ScoreboardObjective objective, String name, int value) {
-        // In 1.21.4, we use getOrCreateScore with a string holder
         ScoreAccess access = scoreboard.getOrCreateScore(ScoreHolder.fromName(name), objective);
         access.setScore(value);
     }
