@@ -4,6 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 
 public class LightGameCommand {
@@ -19,6 +20,8 @@ public class LightGameCommand {
                     .executes(LightGameCommand::executeStop))
                 .then(CommandManager.literal("score")
                     .executes(LightGameCommand::executeScore))
+                .then(CommandManager.literal("kit")
+                    .executes(LightGameCommand::executeKit))
         );
     }
 
@@ -66,6 +69,19 @@ public class LightGameCommand {
     private static int executeScore(CommandContext<ServerCommandSource> context) {
         ServerCommandSource source = context.getSource();
         GameManager.showScore(source);
+        return 1;
+    }
+
+    private static int executeKit(CommandContext<ServerCommandSource> context) {
+        ServerCommandSource source = context.getSource();
+        ServerPlayerEntity player = source.getPlayer();
+        if (player == null) {
+            source.sendFeedback(() -> Text.literal("§c[LightGame] プレイヤーがコマンドを実行してください。"), false);
+            return 0;
+        }
+
+        KitManager.giveKit(player);
+        source.sendFeedback(() -> Text.literal("§a[LightGame] キットを付与しました！"), false);
         return 1;
     }
 }
