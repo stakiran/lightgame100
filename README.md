@@ -1,59 +1,80 @@
-# lightgame100
+# Light Game 100
 
-100マスワールドの地下をどれだけ照らせるかを競うミニゲームMOD（Fabric 1.21.4）
+100ブロックのワールドボーダー内で、地下の空気ブロックをどれだけ照らせるかを競うミニゲームMOD（Fabric 1.21.4）
+
+## 導入方法
+
+### 前提
+
+- Minecraft Java Edition 1.21.4
+- Fabric Loader 0.16.0 以上
+- Fabric API 0.110.5+1.21.4
+
+### インストール
+
+1. [Fabric Loader](https://fabricmc.net/use/installer/) をインストール
+2. [Fabric API](https://modrinth.com/mod/fabric-api) を `mods` フォルダに配置
+3. `lightgame100-1.0.0.jar` を `mods` フォルダに配置
+4. Minecraft 1.21.4（Fabric）で起動
 
 ## 遊び方
 
-### 1. セットアップ
-```
-/lightgame setup
-```
-実行者の位置を中心にワールドボーダー100ブロックが設定されます。
+### コマンド一覧
 
-### 2. アイテム準備
-クリエイティブモードで松明などのアイテムを自分で準備してください。
+| コマンド | 説明 |
+|---|---|
+| `/lightgame setup` | 現在地を中心にワールドボーダー(100ブロック)を設定 |
+| `/lightgame kit` | ゲーム用アイテム一式(シュルカーボックス)を取得 |
+| `/lightgame start` | ゲームを開始 |
+| `/lightgame stop` | ゲームを手動停止 |
+| `/lightgame score` | 現在のスコアを表示 |
 
-### 3. ゲーム開始
-```
-/lightgame start
-```
-以下の流れで自動進行します：
+### ゲームの流れ
 
-1. **スナップショット記録**: y=64未満の空気ブロックの位置を記録
-2. **プレビューフェーズ（30秒）**: スペクテイターモードで地下を確認
-3. **ゲームフェーズ（10分）**: サバイバルモードで地下を照らす！
-4. **終了**: スペクテイターに戻り、最終スコア表示
+1. **セットアップ** — `/lightgame setup` でワールドボーダーを設定
+2. **アイテム準備** — `/lightgame kit` でアイテムを取得（または自分で用意）
+3. **ゲーム開始** — `/lightgame start` で開始
+4. **プレビュー（30秒）** — スペクテイターモードで地下を確認
+5. **ゲーム本番（10分）** — サバイバルモードで地下に松明等を設置して照らす
+6. **終了** — 時間切れ、手動停止、またはプレイヤー死亡でゲーム終了
 
 ### スコアについて
-- **スコア対象**: ゲーム開始時に存在していた空気ブロック（y < 64）のみ
-- 掘って新しくできた空間に松明を置いてもスコアには反映されません
-- 掘削自体は可能（洞窟にたどり着くため）
 
-### その他コマンド
-```
-/lightgame score   # 現在のスコアを表示
-/lightgame stop    # ゲームを手動停止
-```
+- 対象: ワールドボーダー内、y=64未満の全空気ブロック
+- スコア = プレイヤーが照らしたブロック数（自然光源分はベースラインとして差し引き）
+- ゲーム開始時に存在していた空気ブロックのみが対象。掘って新しくできた空間はカウントされない
+- サイドバーにリアルタイム表示（2秒ごと更新）
 
-## 開発
+## 開発者向け
 
-### 要件
-- Java 21 (Eclipse Temurin 推奨)
-- VSCode + Java関連拡張機能
+### Requirements
 
-### 初期設定
-```
-./gradlew vscode
-```
+- Java 21（Eclipse Temurin 推奨）
+- Gradle（Wrapper 同梱）
+- VSCode + Java 関連拡張機能
 
 ### デバッグ
-VSCode の Run and Debug から `Minecraft Client` を起動。
+
+```bash
+./gradlew vscode    # VSCode プロジェクトファイル生成
+```
+
+VSCode の「Run and Debug」から **Minecraft Client** を選択して実行。
 
 ### ビルド
-```
+
+```bash
 ./gradlew build
 ```
-`build/libs/lightgame100-*.jar` が生成されます。
+
+`build/libs/lightgame100-1.0.0.jar` が生成される。
+
+### 配布
+
+1. `./gradlew build` を実行
+2. `build/libs/lightgame100-1.0.0.jar` を配布（`-sources.jar` は不要）
+3. バージョン変更は `gradle.properties` の `mod_version` を編集
 
 ## ライセンス
+
 MIT
