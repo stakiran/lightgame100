@@ -1,6 +1,11 @@
 package com.stakiran.lightgame;
 
-import net.minecraft.scoreboard.*;
+import net.minecraft.scoreboard.ScoreAccess;
+import net.minecraft.scoreboard.ScoreHolder;
+import net.minecraft.scoreboard.Scoreboard;
+import net.minecraft.scoreboard.ScoreboardCriterion;
+import net.minecraft.scoreboard.ScoreboardDisplaySlot;
+import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.scoreboard.number.BlankNumberFormat;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.Text;
@@ -49,10 +54,10 @@ public class ScoreboardManager {
         String timeStr = String.format("%d:%02d", minutes, seconds);
 
         // Scoreboard lines (higher number = higher on sidebar)
-        setScore(scoreboard, objective, "§fTime:  §e" + timeStr, 3);
-        setScore(scoreboard, objective, "§fLit:   §a" + score, 2);
+        setScore(scoreboard, objective, "§fTime : §e" + timeStr, 3);
+        setScore(scoreboard, objective, "§fLight: §a" + score, 2);
         setScore(scoreboard, objective, "§fTotal: §b" + total, 1);
-        setScore(scoreboard, objective, String.format("§fRate:  §6%.1f%%", percent), 0);
+        setScore(scoreboard, objective, String.format("§fRate : §6%.1f%%", percent), 0);
     }
 
     public static void clearSidebar(MinecraftServer server) {
