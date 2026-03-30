@@ -14,7 +14,8 @@
 
 1. [Fabric Loader](https://fabricmc.net/use/installer/) をインストール
 2. [Fabric API](https://modrinth.com/mod/fabric-api) を `mods` フォルダに配置
-3. `lightgame100-1.0.0.jar` を `mods` フォルダに配置
+3. `lightgame100-x.x.x.jar` を `mods` フォルダに配置
+    - [Releasesページからもダウンロードできます](https://github.com/stakiran/lightgame100/releases)
 4. Minecraft 1.21.4（Fabric）で起動
 
 ## 遊び方
