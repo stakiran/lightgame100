@@ -80,7 +80,7 @@ public class GameManager {
             return;
         }
 
-        gameWorld = (ServerWorld) player.getWorld();
+        gameWorld = player.getEntityWorld();
         centerPos = player.getBlockPos();
 
         // Set world border
@@ -265,7 +265,7 @@ public class GameManager {
 
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
             if (currentPhase == Phase.GAME && entity instanceof ServerPlayerEntity) {
-                MinecraftServer server = entity.getServer();
+                MinecraftServer server = entity.getEntityWorld().getServer();
                 if (server != null) {
                     stop(server.getCommandSource(), StopReason.DEATH);
                 }

@@ -1,6 +1,6 @@
 # Light Game 100
 
-100ブロックのワールドボーダー内で、地下の空気ブロックをどれだけ照らせるかを競うミニゲームMOD（Fabric 1.21.4）
+100ブロックのワールドボーダー内で、地下の空気ブロックをどれだけ照らせるかを競うミニゲームMOD（Fabric 1.21.11）
 
 解説ウェブサイトはこちら: <https://stakiran.github.io/lightgame100/>
 
@@ -8,9 +8,9 @@
 
 ### 前提
 
-- Minecraft Java Edition 1.21.4
-- Fabric Loader 0.16.0 以上
-- Fabric API 0.110.5+1.21.4
+- Minecraft Java Edition 1.21.11
+- Fabric Loader 0.19.0 以上
+- Fabric API 0.141.6+1.21.11
 
 ### インストール
 
@@ -18,7 +18,7 @@
 2. [Fabric API](https://modrinth.com/mod/fabric-api) を `mods` フォルダに配置
 3. `lightgame100-x.x.x.jar` を `mods` フォルダに配置
     - [Releasesページからもダウンロードできます](https://github.com/stakiran/lightgame100/releases)
-4. Minecraft 1.21.4（Fabric）で起動
+4. Minecraft 1.21.11（Fabric）で起動
 
 ## 遊び方
 

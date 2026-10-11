@@ -20,7 +20,7 @@ import java.util.List;
 public class KitManager {
 
     public static void giveKit(ServerPlayerEntity player) {
-        Registry<Enchantment> enchantmentRegistry = player.getServerWorld()
+        Registry<Enchantment> enchantmentRegistry = player.getEntityWorld()
             .getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT);
 
         List<ItemStack> contents = new ArrayList<>(Collections.nCopies(27, ItemStack.EMPTY));
