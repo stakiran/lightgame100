@@ -69,12 +69,12 @@ VSCode の「Run and Debug」から **Minecraft Client** を選択して実行�
 ./gradlew build
 ```
 
-`build/libs/lightgame100-1.0.0.jar` が生成される。
+`build/libs/lightgame100-x.x.x.jar` が生成される（`x.x.x` は `gradle.properties` の `mod_version`）。
 
 ### 配布
 
 1. `./gradlew build` を実行
-2. `build/libs/lightgame100-1.0.0.jar` を配布（`-sources.jar` は不要）
+2. `build/libs/lightgame100-x.x.x.jar` を配布（`-sources.jar` は不要）
 3. バージョン変更は `gradle.properties` の `mod_version` を編集
 
 ## ライセンス
