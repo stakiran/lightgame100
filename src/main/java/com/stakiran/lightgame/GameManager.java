@@ -212,9 +212,6 @@ public class GameManager {
         // Place beacon marker at player's last position
         if (lastPlayerPos != null) {
             placeBeaconMarker(lastPlayerPos);
-            server.getPlayerManager().broadcast(
-                Text.literal(String.format("§e[LightGame] 最終位置: %d, %d, %d",
-                    lastPlayerPos.getX(), lastPlayerPos.getY(), lastPlayerPos.getZ())), false);
         }
 
         // Switch to spectator at last position for review
