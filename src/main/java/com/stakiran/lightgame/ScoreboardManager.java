@@ -10,18 +10,22 @@ import net.minecraft.scoreboard.number.BlankNumberFormat;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.Text;
 
+import java.util.ArrayList;
+import java.util.List;
+
+// 画面右のサイドバーにスコア（照らした数 / 合計 / 割合）を表示する。残り時間は TimerBar が担当。
 public class ScoreboardManager {
 
     private static final String OBJECTIVE_NAME = "lightgame";
+
+    // Sidebar lines are keyed by their text, so remember what was shown to remove stale lines
+    private static final List<String> shownLines = new ArrayList<>();
 
     public static void setupSidebar(MinecraftServer server) {
         Scoreboard scoreboard = server.getScoreboard();
 
         // Remove existing objective if present
-        ScoreboardObjective existing = scoreboard.getNullableObjective(OBJECTIVE_NAME);
-        if (existing != null) {
-            scoreboard.removeObjective(existing);
-        }
+        clearSidebar(server);
 
         // Create new objective with blank number format to hide red numbers
         ScoreboardObjective objective = scoreboard.addObjective(
@@ -37,27 +41,37 @@ public class ScoreboardManager {
         scoreboard.setObjectiveSlot(ScoreboardDisplaySlot.SIDEBAR, objective);
 
         // Initial values
-        updateSidebar(server, 0, 0, 10, 0);
+        updateSidebar(server, 0, 0);
     }
 
-    public static void updateSidebar(MinecraftServer server, int score, int total, int minutes, int seconds) {
+    public static void updateSidebar(MinecraftServer server, int score, int total) {
         Scoreboard scoreboard = server.getScoreboard();
         ScoreboardObjective objective = scoreboard.getNullableObjective(OBJECTIVE_NAME);
         if (objective == null) return;
 
-        // Clear old scores (recreates the objective)
-        clearScores(scoreboard, objective);
-        objective = scoreboard.getNullableObjective(OBJECTIVE_NAME);
-        if (objective == null) return;
-
         double percent = total > 0 ? (score * 100.0 / total) : 0;
-        String timeStr = String.format("%d:%02d", minutes, seconds);
 
-        // Scoreboard lines (higher number = higher on sidebar)
-        setScore(scoreboard, objective, "§fTime : §e" + timeStr, 3);
-        setScore(scoreboard, objective, "§fLight: §a" + score, 2);
-        setScore(scoreboard, objective, "§fTotal: §b" + total, 1);
-        setScore(scoreboard, objective, String.format("§fRate : §6%.1f%%", percent), 0);
+        // Scoreboard lines, top to bottom
+        List<String> lines = List.of(
+            "§fLight: §a" + score,
+            "§fTotal: §b" + total,
+            String.format("§fRate : §6%.1f%%", percent)
+        );
+
+        // Remove lines that are no longer shown, then (re)set the current ones.
+        // Unchanged lines are left alone so the sidebar does not flicker.
+        for (String old : shownLines) {
+            if (!lines.contains(old)) {
+                scoreboard.removeScore(ScoreHolder.fromName(old), objective);
+            }
+        }
+        for (int i = 0; i < lines.size(); i++) {
+            // Higher number = higher on the sidebar
+            ScoreAccess access = scoreboard.getOrCreateScore(ScoreHolder.fromName(lines.get(i)), objective);
+            access.setScore(lines.size() - 1 - i);
+        }
+        shownLines.clear();
+        shownLines.addAll(lines);
     }
 
     public static void clearSidebar(MinecraftServer server) {
@@ -66,23 +80,6 @@ public class ScoreboardManager {
         if (existing != null) {
             scoreboard.removeObjective(existing);
         }
-    }
-
-    private static void clearScores(Scoreboard scoreboard, ScoreboardObjective objective) {
-        scoreboard.removeObjective(objective);
-        ScoreboardObjective newObj = scoreboard.addObjective(
-            OBJECTIVE_NAME,
-            ScoreboardCriterion.DUMMY,
-            Text.literal("§6§lLight Game 100"),
-            ScoreboardCriterion.RenderType.INTEGER,
-            true,
-            BlankNumberFormat.INSTANCE
-        );
-        scoreboard.setObjectiveSlot(ScoreboardDisplaySlot.SIDEBAR, newObj);
-    }
-
-    private static void setScore(Scoreboard scoreboard, ScoreboardObjective objective, String name, int value) {
-        ScoreAccess access = scoreboard.getOrCreateScore(ScoreHolder.fromName(name), objective);
-        access.setScore(value);
+        shownLines.clear();
     }
 }

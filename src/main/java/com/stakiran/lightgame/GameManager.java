@@ -75,8 +75,9 @@ public class GameManager {
 
         MinecraftServer server = source.getServer();
 
-        // Clear leftovers from a previous game (sidebar, snapshot, timers)
+        // Clear leftovers from a previous game (HUD, snapshot, timers)
         ScoreboardManager.clearSidebar(server);
+        TimerBar.hide();
         snapshotAirBlocks.clear();
         lastPlayerPos = null;
         ticksSinceLastScoreUpdate = 0;
@@ -222,8 +223,9 @@ public class GameManager {
                 Collections.emptySet(), player.getYaw(), player.getPitch(), false);
         }
 
-        // Clear the sidebar scoreboard
+        // Clear the HUD
         ScoreboardManager.clearSidebar(server);
+        TimerBar.hide();
 
         server.getPlayerManager().broadcast(
             Text.literal("§7[LightGame] もう一度遊ぶには /lightgame を実行してください。"), false);
@@ -234,6 +236,7 @@ public class GameManager {
     // ========== TICK EVENT ==========
 
     public static void resetState() {
+        TimerBar.hide();
         currentPhase = Phase.IDLE;
         centerPos = null;
         gameWorld = null;
@@ -273,6 +276,8 @@ public class GameManager {
     }
 
     private static void onPreviewTick(MinecraftServer server) {
+        TimerBar.updatePreview(server, ticksRemaining, PREVIEW_SECONDS * TICKS_PER_SECOND);
+
         // Show countdown every 10 seconds, and at 5, 3, 2, 1
         int secondsLeft = ticksRemaining / TICKS_PER_SECOND;
         if (ticksRemaining % TICKS_PER_SECOND == 0) {
@@ -322,6 +327,9 @@ public class GameManager {
             lastPlayerPos = player.getBlockPos();
         }
 
+        // Remaining time on the boss bar, updated every tick so the gauge moves smoothly
+        TimerBar.updateGame(server, ticksRemaining, GAME_SECONDS * TICKS_PER_SECOND);
+
         // Show time countdown
         int secondsLeft = ticksRemaining / TICKS_PER_SECOND;
         if (ticksRemaining % TICKS_PER_SECOND == 0) {
@@ -338,15 +346,11 @@ public class GameManager {
             }
         }
 
-        // Update scoreboard periodically
+        // Update the score sidebar periodically (scanning every snapshot block is costly)
         ticksSinceLastScoreUpdate++;
         if (ticksSinceLastScoreUpdate >= SCORE_UPDATE_INTERVAL) {
             ticksSinceLastScoreUpdate = 0;
-            int score = calculateScore();
-            int total = snapshotAirBlocks.size();
-            int minutes = secondsLeft / 60;
-            int secs = secondsLeft % 60;
-            ScoreboardManager.updateSidebar(server, score, total, minutes, secs);
+            ScoreboardManager.updateSidebar(server, calculateScore(), snapshotAirBlocks.size());
         }
 
         if (ticksRemaining <= 0) {
