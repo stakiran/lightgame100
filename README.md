@@ -1,4 +1,5 @@
 # Light Game 100
+[![松明マイクラデモ動画](https://img.youtube.com/vi/kamlpgmELvw/hqdefault.jpg)](https://www.youtube.com/watch?v=kamlpgmELvw)
 
 100ブロックのワールドボーダー内で、地下の空気ブロックをどれだけ照らせるかを競うミニゲームMOD（Fabric 1.21.11）
 
