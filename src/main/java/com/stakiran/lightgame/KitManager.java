@@ -25,36 +25,38 @@ public class KitManager {
 
         List<ItemStack> contents = new ArrayList<>(Collections.nCopies(27, ItemStack.EMPTY));
 
-        // Row 1: ネザライトの剣, 松明, ネザライトのツルハシ, 丸石, ネザライトの斧, ネザライトのショベル, マグマバケツ, 水バケツ, 牛肉
+        // 種類ごとに分けた並び（特定のホットバー配置を前提にしない）
+        // 左4列: ツール / 防具 / 移動・消耗品、6列目: 丸石・盾、右3列: 松明
+        // Row 1: ネザライトの剣, ネザライトのツルハシ, ネザライトのショベル, ネザライトの斧, (空き), 丸石, 松明 x3
         contents.set(0, new ItemStack(Items.NETHERITE_SWORD));
-        contents.set(1, new ItemStack(Items.TORCH, 64));
-        contents.set(2, createPickaxe(enchantmentRegistry));
-        contents.set(3, new ItemStack(Items.COBBLESTONE, 64));
-        contents.set(4, createAxe(enchantmentRegistry));
-        contents.set(5, createShovel(enchantmentRegistry));
-        contents.set(6, new ItemStack(Items.LAVA_BUCKET));
-        contents.set(7, new ItemStack(Items.WATER_BUCKET));
-        contents.set(8, new ItemStack(Items.COOKED_BEEF, 64));
+        contents.set(1, createPickaxe(enchantmentRegistry));
+        contents.set(2, createShovel(enchantmentRegistry));
+        contents.set(3, createAxe(enchantmentRegistry));
+        contents.set(5, new ItemStack(Items.COBBLESTONE, 64));
 
-        // Row 2: 盾, 鉄レギンス, 鉄ブーツ, 鉄ヘルメット, 鉄チェストプレート, 盾, ロケット花火, エリトラ, 松明
-        contents.set(9, new ItemStack(Items.SHIELD));
-        contents.set(10, new ItemStack(Items.IRON_LEGGINGS));
-        contents.set(11, new ItemStack(Items.IRON_BOOTS));
-        contents.set(12, new ItemStack(Items.IRON_HELMET));
-        contents.set(13, new ItemStack(Items.IRON_CHESTPLATE));
-        contents.set(14, new ItemStack(Items.SHIELD));
-        contents.set(15, createFireworkRocket(64));
-        contents.set(16, new ItemStack(Items.ELYTRA));
-        contents.set(17, new ItemStack(Items.TORCH, 64));
+        // Row 2: 鉄レギンス, 鉄ブーツ, 鉄ヘルメット, 鉄チェストプレート, (空き), (空き), 盾, 松明 x2
+        contents.set(9, new ItemStack(Items.IRON_LEGGINGS));
+        contents.set(10, new ItemStack(Items.IRON_BOOTS));
+        contents.set(11, new ItemStack(Items.IRON_HELMET));
+        contents.set(12, new ItemStack(Items.IRON_CHESTPLATE));
+        contents.set(15, new ItemStack(Items.SHIELD));
 
-        // Row 3: 松明 x5スタック
-        for (int i = 18; i <= 22; i++) {
-            contents.set(i, new ItemStack(Items.TORCH, 64));
+        // Row 3: エリトラ, ロケット花火, 水バケツ, 牛肉, (空き), (空き), 盾, 松明 x2
+        contents.set(18, new ItemStack(Items.ELYTRA));
+        contents.set(19, createFireworkRocket(64));
+        contents.set(20, new ItemStack(Items.WATER_BUCKET));
+        contents.set(21, new ItemStack(Items.COOKED_BEEF, 64));
+        contents.set(24, new ItemStack(Items.SHIELD));
+
+        for (int slot : new int[] {6, 7, 8, 16, 17, 25, 26}) {
+            contents.set(slot, new ItemStack(Items.TORCH, 64));
         }
 
         ItemStack shulkerBox = new ItemStack(Items.SHULKER_BOX);
         shulkerBox.set(DataComponentTypes.CONTAINER, ContainerComponent.fromStacks(contents));
 
+        // Reset inventory to the starting state (makes retrying easy)
+        player.getInventory().clear();
         player.giveItemStack(shulkerBox);
     }
 

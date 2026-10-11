@@ -30,11 +30,10 @@ public class GameManager {
     }
 
     public enum StopReason {
-        MANUAL, TIMEOUT, DEATH
+        TIMEOUT, DEATH
     }
 
     private static Phase currentPhase = Phase.IDLE;
-    private static boolean setupDone = false;
 
     // Setup data
     private static BlockPos centerPos;
@@ -63,22 +62,24 @@ public class GameManager {
     // Y threshold
     private static final int Y_THRESHOLD = 64;
 
-    public static boolean isRunning() {
-        return currentPhase == Phase.PREVIEW || currentPhase == Phase.GAME;
-    }
-
-    public static boolean isSetupDone() {
-        return setupDone;
-    }
-
     // ========== SETUP ==========
 
+    // ボーダー設定・持ち物リセット・キット支給・プレビュー開始をまとめて行う。
+    // ゲーム中・終了後に呼んでもよい（リセットを兼ねる）
     public static void setup(ServerCommandSource source) {
         ServerPlayerEntity player = source.getPlayer();
         if (player == null) {
             source.sendFeedback(() -> Text.literal("§c[LightGame] プレイヤーがコマンドを実行してください。"), false);
             return;
         }
+
+        MinecraftServer server = source.getServer();
+
+        // Clear leftovers from a previous game (sidebar, snapshot, timers)
+        ScoreboardManager.clearSidebar(server);
+        snapshotAirBlocks.clear();
+        lastPlayerPos = null;
+        ticksSinceLastScoreUpdate = 0;
 
         gameWorld = player.getEntityWorld();
         centerPos = player.getBlockPos();
@@ -88,31 +89,30 @@ public class GameManager {
         border.setCenter(centerPos.getX() + 0.5, centerPos.getZ() + 0.5);
         border.setSize(BORDER_SIZE);
 
-        // Teleport player to center
-        player.teleport(gameWorld, centerPos.getX() + 0.5, centerPos.getY(), centerPos.getZ() + 0.5, Collections.emptySet(), player.getYaw(), player.getPitch(), false);
+        // Reset player state (including inventory) so that a retry starts fair,
+        // then enter the preview phase in spectator mode
+        for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+            p.teleport(gameWorld, centerPos.getX() + 0.5, centerPos.getY(), centerPos.getZ() + 0.5,
+                Collections.emptySet(), p.getYaw(), p.getPitch(), false);
+            KitManager.giveKit(p);
+            p.setHealth(p.getMaxHealth());
+            p.getHungerManager().setFoodLevel(20);
+            p.getHungerManager().setSaturationLevel(5.0f);
+            p.clearStatusEffects();
+            p.extinguish();
+            p.setExperienceLevel(0);
+            p.setExperiencePoints(0);
+            p.changeGameMode(GameMode.SPECTATOR);
+        }
 
-        setupDone = true;
-        currentPhase = Phase.IDLE;
-
-        source.sendFeedback(() -> Text.literal("§a[LightGame] セットアップ完了！"), false);
-        source.sendFeedback(() -> Text.literal("§a  中心座標: " + centerPos.getX() + ", " + centerPos.getY() + ", " + centerPos.getZ()), false);
-        source.sendFeedback(() -> Text.literal("§a  ワールドボーダー: " + BORDER_SIZE + "ブロック"), false);
-        source.sendFeedback(() -> Text.literal("§e  クリエイティブモードでアイテムを準備してから /lightgame start を実行してください。"), false);
-    }
-
-    // ========== START ==========
-
-    public static void start(ServerCommandSource source) {
-        ServerPlayerEntity player = source.getPlayer();
-        if (player == null) return;
-
-        // Enter preview phase (spectator mode)
         currentPhase = Phase.PREVIEW;
         ticksRemaining = PREVIEW_SECONDS * TICKS_PER_SECOND;
 
-        player.changeGameMode(GameMode.SPECTATOR);
-
-        source.sendFeedback(() -> Text.literal("§b[LightGame] プレビューフェーズ開始！ " + PREVIEW_SECONDS + "秒間スペクテイターモードで地下を確認できます。"), false);
+        server.getPlayerManager().broadcast(
+            Text.literal("§a[LightGame] セットアップ完了！ 中心座標: " + centerPos.getX() + ", " + centerPos.getY() + ", " + centerPos.getZ()
+                + " / ワールドボーダー: " + BORDER_SIZE + "ブロック"), false);
+        server.getPlayerManager().broadcast(
+            Text.literal("§b[LightGame] プレビューフェーズ開始！ " + PREVIEW_SECONDS + "秒間スペクテイターモードで地下を確認できます。"), false);
     }
 
     // ========== SNAPSHOT ==========
@@ -161,16 +161,6 @@ public class GameManager {
         return litCount;
     }
 
-    public static void showScore(ServerCommandSource source) {
-        int total = snapshotAirBlocks.size();
-        int lit = calculateScore();
-        double percent = total > 0 ? (lit * 100.0 / total) : 0;
-
-        source.sendFeedback(() -> Text.literal(String.format(
-            "§6[LightGame] スコア: %d / %d (%.1f%%)", lit, total, percent
-        )), false);
-    }
-
     // ========== BEACON MARKER ==========
 
     private static void placeBeaconMarker(BlockPos playerPos) {
@@ -214,8 +204,6 @@ public class GameManager {
                 Text.literal("§c§l[LightGame] 時間切れ！ ゲーム終了！"), false);
             case DEATH -> server.getPlayerManager().broadcast(
                 Text.literal("§c§l[LightGame] プレイヤーが死亡！ ゲーム終了！"), false);
-            case MANUAL -> server.getPlayerManager().broadcast(
-                Text.literal("§c§l[LightGame] ゲームを手動停止しました。"), false);
         }
 
         server.getPlayerManager().broadcast(
@@ -240,6 +228,9 @@ public class GameManager {
         // Clear the sidebar scoreboard
         ScoreboardManager.clearSidebar(server);
 
+        server.getPlayerManager().broadcast(
+            Text.literal("§7[LightGame] もう一度遊ぶには /lightgame を実行してください。"), false);
+
         currentPhase = Phase.IDLE;
     }
 
@@ -247,7 +238,6 @@ public class GameManager {
 
     public static void resetState() {
         currentPhase = Phase.IDLE;
-        setupDone = false;
         centerPos = null;
         gameWorld = null;
         ticksRemaining = 0;
